@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MQTT Web Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 50px;
+    }
+    .button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Control ESP8266 via MQTT</h1>
+
+  <button class="button" onclick="sendMQTTMessage('START')">START</button>
+  <button class="button" onclick="sendMQTTMessage('STOP')">STOP</button>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script>
+    // MQTT setup
+    const brokerUrl = 'wss://604b372efa0e444ebbe062ca5d3e2243.s1.eu.hivemq.cloud:8884/mqtt';
+    const options = {
+      username: 'truong',  // MQTT broker username
+      password: 'Lhh12345@@',  // MQTT broker password
+      clientId: 'web-client-' + Math.random().toString(16).substr(2, 8),
+      protocolVersion: 4,
+      clean: true,
+    };
+
+    const client = mqtt.connect(brokerUrl, options);
+
+    // When the client connects
+    client.on('connect', function () {
+      console.log('Connected to MQTT Broker!');
+    });
+
+    // Handle connection failure
+    client.on('error', function (err) {
+      console.error('Connection error: ', err);
+      client.end();
+    });
+
+    // Function to send messages to the MQTT broker
+    function sendMQTTMessage(command) {
+      const topic = 'esp8266/client'; // Topic ESP8266 subscribes to
+      client.publish(topic, command, { qos: 0, retain: false });
+      console.log(`Message "${command}" sent to ${topic}`);
+    }
+  </script>
+</body>
+</html>
