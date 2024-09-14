@@ -31,30 +31,9 @@
             align-items: center;
         }
 
-        .enable-switch {
-            display: flex;
-            align-items: center;
-        }
-
         .enable-switch label {
             font-size: 1.1rem;
             color: #16a085;
-            margin-right: 10px;
-        }
-
-        #enableButton {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s;
-        }
-
-        #enableButton.active {
-            background-color: #16a085;
         }
 
         select {
@@ -149,38 +128,35 @@
         <div class="top-controls">
             <div class="enable-switch">
                 <label>ENABLE:</label>
-                <button id="enableButton" onclick="toggleEnable()">OFF</button>
+                <input type="checkbox" id="enable" onchange="toggleEnable()">
             </div>
-            <!-- <select id="robotId">
+            <select id="robotId">
                 <option value="robot1">ID_Robot</option>
-            </select> -->
+            </select>
         </div>
-
-        <button id="cameraButton" onclick="sendCameraCommand()">Open Camera</button>
-        <div id="cameraFeed">Image_Received</div>
-
+        
         <div class="control-panel">
             <div class="control-row">
-                <button class="control-button" id="up" onmousedown="startSendingCommand('UP')" onmouseup="stopSendingCommand()">↑</button>
+                <button class="control-button" id="up" onclick="sendStraightSpeed('+')">↑</button>
             </div>
             <div class="control-row">
-                <button class="control-button" id="left" onmousedown="startSendingCommand('LEFT')" onmouseup="stopSendingCommand()">←</button>
+                <button class="control-button" id="left" onclick="sendRotationSpeed('+')">←</button>
                 <button class="control-button" id="stop" onclick="sendCommand('STOP')">⦿</button>
-                <button class="control-button" id="right" onmousedown="startSendingCommand('RIGHT')" onmouseup="stopSendingCommand()">→</button>
+                <button class="control-button" id="right" onclick="sendRotationSpeed('-')">→</button>
             </div>
             <div class="control-row">
-                <button class="control-button" id="down" onmousedown="startSendingCommand('DOWN')" onmouseup="stopSendingCommand()">↓</button>
+                <button class="control-button" id="down" onclick="sendStraightSpeed('-')">↓</button>
             </div>
         </div>
 
         <div class="sliders">
             <div class="slider">
                 <label>Straight speed: <span id="straightSpeed">0</span></label>
-                <input type="range" min="0" max="1" value="0" step="0.1" id="straightSpeedSlider" oninput="updateStraightSpeed()">
+                <input type="range" min="0" max="100" value="0" id="straightSpeedSlider" oninput="updateStraightSpeed()">
             </div>
             <div class="slider">
                 <label>Rotation speed: <span id="rotationSpeed">0</span></label>
-                <input type="range" min="0" max="1" value="0" step="0.1" id="rotationSpeedSlider" oninput="updateRotationSpeed()">
+                <input type="range" min="0" max="100" value="0" id="rotationSpeedSlider" oninput="updateRotationSpeed()">
             </div>
         </div>
     </div>
@@ -200,45 +176,12 @@
 
         client.on('connect', function () {
             console.log('Connected to MQTT Broker!');
-            // Gửi lệnh reset robot khi trang web được tải
-            sendCommand('RESET');
-            sendCommand('DISABLE');
-            sendCommand('STOP');
         });
 
         client.on('error', function (err) {
             console.error('Connection error: ', err);
             client.end();
         });
-
-        let intervalId;
-        let enabled = false;
-
-        // Reset các biến và giao diện khi trang web được tải
-        window.onload = function() {
-            // Đặt lại trạng thái enabled
-            enabled = false;
-            const enableButton = document.getElementById('enableButton');
-            enableButton.classList.remove('active');
-            enableButton.innerText = 'OFF';
-
-            // Đặt lại giá trị của thanh trượt
-            document.getElementById('straightSpeedSlider').value = 0;
-            document.getElementById('rotationSpeedSlider').value = 0;
-            document.getElementById('straightSpeed').innerText = '0';
-            document.getElementById('rotationSpeed').innerText = '0';
-        };
-
-        function startSendingCommand(command) {
-            sendCommand(command);
-            intervalId = setInterval(function() {
-                sendCommand(command);
-            }, 100);
-        }
-
-        function stopSendingCommand() {
-            clearInterval(intervalId);
-        }
 
         function sendCommand(command) {
             const topic = 'esp8266/client';
@@ -249,25 +192,28 @@
         function updateStraightSpeed() {
             const speed = document.getElementById('straightSpeedSlider').value;
             document.getElementById('straightSpeed').innerText = speed;
-            sendCommand(`STRAIGHT_SPEED:${speed}`);
         }
 
         function updateRotationSpeed() {
             const speed = document.getElementById('rotationSpeedSlider').value;
             document.getElementById('rotationSpeed').innerText = speed;
-            sendCommand(`ROTATION_SPEED:${speed}`);
         }
 
-        function sendCameraCommand() {
-            sendCommand('CAMERA');
+        function sendStraightSpeed(direction) {
+            const speed = document.getElementById('straightSpeedSlider').value;
+            sendCommand(`${direction}STRAIGHT_SPEED:${speed}`);
+            console.log(`${direction}STRAIGHT_SPEED:${speed} sent`);
+        }
+
+        function sendRotationSpeed(direction) {
+            const speed = document.getElementById('rotationSpeedSlider').value;
+            sendCommand(`${direction}ROTATION_SPEED:${speed}`);
+            console.log(`${direction}ROTATION_SPEED:${speed} sent`);
         }
 
         function toggleEnable() {
-            enabled = !enabled;
-            const button = document.getElementById('enableButton');
-            button.classList.toggle('active', enabled);
-            button.innerText = enabled ? 'ON' : 'OFF';
-            sendCommand(enabled ? 'ENABLE' : 'DISABLE');
+            const isEnabled = document.getElementById('enable').checked;
+            sendCommand(isEnabled ? 'ENABLE' : 'DISABLE');
         }
     </script>
 </body>
