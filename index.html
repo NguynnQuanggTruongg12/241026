@@ -46,8 +46,8 @@
             background-color: #e74c3c;
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 10px 20px;
+            border-radius: 6px;
+            padding: 6px 16px;
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.3s;
@@ -148,12 +148,9 @@
     <div class="container">
         <div class="top-controls">
             <div class="enable-switch">
-                <label>ENABLE:</label>
+                <label>STATUS:</label>
                 <button id="enableButton" onclick="toggleEnable()">OFF</button>
             </div>
-            <!-- <select id="robotId">
-                <option value="robot1">ID_Robot</option>
-            </select> -->
         </div>
 
         <button id="cameraButton" onclick="sendCameraCommand()">Open Camera</button>
@@ -200,7 +197,6 @@
 
         client.on('connect', function () {
             console.log('Connected to MQTT Broker!');
-            // Gửi lệnh reset robot khi trang web được tải
             sendCommand('RESET');
             sendCommand('DISABLE');
             sendCommand('STOP');
@@ -214,15 +210,12 @@
         let intervalId;
         let enabled = false;
 
-        // Reset các biến và giao diện khi trang web được tải
         window.onload = function() {
-            // Đặt lại trạng thái enabled
             enabled = false;
             const enableButton = document.getElementById('enableButton');
             enableButton.classList.remove('active');
             enableButton.innerText = 'OFF';
 
-            // Đặt lại giá trị của thanh trượt
             document.getElementById('straightSpeedSlider').value = 0;
             document.getElementById('rotationSpeedSlider').value = 0;
             document.getElementById('straightSpeed').innerText = '0';
@@ -238,6 +231,9 @@
 
         function stopSendingCommand() {
             clearInterval(intervalId);
+            setTimeout(() => {
+                sendCommand('STOP');
+            }, 100);
         }
 
         function sendCommand(command) {
